@@ -1,0 +1,6 @@
+MOV R0, #2
+MOV R1, #4
+NOP
+NOP
+NOP
+ADD R1, R1, R0

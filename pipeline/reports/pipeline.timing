@@ -1,0 +1,167 @@
+Information: Updating design information... (UID-85)
+Warning: Design 'pipeline' contains 1 high-fanout nets. A fanout number of 1000 will be used for delay calculations involving these nets. (TIM-134)
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : pipeline
+Version: K-2015.06-SP5-5
+Date   : Fri Feb 28 19:47:37 2025
+****************************************
+
+ # A fanout number of 1000 was used for high fanout net computations.
+
+Operating Conditions: typical   Library: gscl45nm
+Wire Load Model Mode: top
+
+  Startpoint: ID_EX_reg_reg[131]
+              (rising edge-triggered flip-flop clocked by clk)
+  Endpoint: Z_reg (rising edge-triggered flip-flop clocked by clk)
+  Path Group: clk
+  Path Type: max
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock clk (rise edge)                                   0.00       0.00
+  clock network delay (ideal)                             0.00       0.00
+  ID_EX_reg_reg[131]/CLK (DFFPOSX1)                       0.00 #     0.00 r
+  ID_EX_reg_reg[131]/Q (DFFPOSX1)                         0.10       0.10 f
+  alu_inst/opcode[1] (alu)                                0.00       0.10 f
+  alu_inst/U389/Y (INVX1)                                 0.02       0.12 r
+  alu_inst/U316/Y (NOR3X1)                                0.04       0.16 f
+  alu_inst/U218/Y (INVX1)                                 0.57       0.73 r
+  alu_inst/U304/Y (XNOR2X1)                               0.13       0.86 r
+  alu_inst/add_inst/B[1] (add64b)                         0.00       0.86 r
+  alu_inst/add_inst/CLA0/B[1] (cla_16bit_3)               0.00       0.86 r
+  alu_inst/add_inst/CLA0/CLA0/B[1] (cla_4bit_15)          0.00       0.86 r
+  alu_inst/add_inst/CLA0/CLA0/PFA1/B (pfa_62)             0.00       0.86 r
+  alu_inst/add_inst/CLA0/CLA0/PFA1/U3/Y (XOR2X1)          0.10       0.96 r
+  alu_inst/add_inst/CLA0/CLA0/PFA1/P (pfa_62)             0.00       0.96 r
+  alu_inst/add_inst/CLA0/CLA0/U11/Y (AOI21X1)             0.04       1.00 f
+  alu_inst/add_inst/CLA0/CLA0/U3/Y (BUFX2)                0.03       1.04 f
+  alu_inst/add_inst/CLA0/CLA0/U10/Y (OAI21X1)             0.04       1.08 r
+  alu_inst/add_inst/CLA0/CLA0/U9/Y (AOI21X1)              0.03       1.11 f
+  alu_inst/add_inst/CLA0/CLA0/U16/Y (INVX1)               0.01       1.12 r
+  alu_inst/add_inst/CLA0/CLA0/G0 (cla_4bit_15)            0.00       1.12 r
+  alu_inst/add_inst/CLA0/U11/Y (AOI21X1)                  0.01       1.14 f
+  alu_inst/add_inst/CLA0/U1/Y (BUFX2)                     0.03       1.17 f
+  alu_inst/add_inst/CLA0/U10/Y (OAI21X1)                  0.04       1.21 r
+  alu_inst/add_inst/CLA0/U9/Y (AOI21X1)                   0.03       1.24 f
+  alu_inst/add_inst/CLA0/U16/Y (INVX1)                    0.00       1.25 r
+  alu_inst/add_inst/CLA0/G0 (cla_16bit_3)                 0.00       1.25 r
+  alu_inst/add_inst/U8/Y (AOI21X1)                        0.01       1.25 f
+  alu_inst/add_inst/U3/Y (INVX1)                          0.04       1.29 r
+  alu_inst/add_inst/U7/Y (AOI21X1)                        0.03       1.32 f
+  alu_inst/add_inst/U1/Y (INVX1)                          0.04       1.35 r
+  alu_inst/add_inst/U6/Y (AOI21X1)                        0.03       1.38 f
+  alu_inst/add_inst/U2/Y (INVX1)                          0.04       1.42 r
+  alu_inst/add_inst/CLA3/Cin (cla_16bit_0)                0.00       1.42 r
+  alu_inst/add_inst/CLA3/U15/Y (AND2X1)                   0.03       1.45 r
+  alu_inst/add_inst/CLA3/U14/Y (OR2X1)                    0.08       1.52 r
+  alu_inst/add_inst/CLA3/U13/Y (AOI21X1)                  0.03       1.55 f
+  alu_inst/add_inst/CLA3/U4/Y (BUFX2)                     0.04       1.59 f
+  alu_inst/add_inst/CLA3/U12/Y (OAI21X1)                  0.06       1.65 r
+  alu_inst/add_inst/CLA3/CLA3/Cin (cla_4bit_0)            0.00       1.65 r
+  alu_inst/add_inst/CLA3/CLA3/U8/Y (AND2X1)               0.03       1.68 r
+  alu_inst/add_inst/CLA3/CLA3/U6/Y (OR2X1)                0.07       1.74 r
+  alu_inst/add_inst/CLA3/CLA3/U13/Y (AOI21X1)             0.02       1.77 f
+  alu_inst/add_inst/CLA3/CLA3/U4/Y (BUFX2)                0.04       1.80 f
+  alu_inst/add_inst/CLA3/CLA3/U12/Y (OAI21X1)             0.05       1.85 r
+  alu_inst/add_inst/CLA3/CLA3/PFA3/Cin (pfa_0)            0.00       1.85 r
+  alu_inst/add_inst/CLA3/CLA3/PFA3/U2/Y (XOR2X1)          0.06       1.91 r
+  alu_inst/add_inst/CLA3/CLA3/PFA3/result (pfa_0)         0.00       1.91 r
+  alu_inst/add_inst/CLA3/CLA3/result[3] (cla_4bit_0)      0.00       1.91 r
+  alu_inst/add_inst/CLA3/result[15] (cla_16bit_0)         0.00       1.91 r
+  alu_inst/add_inst/result[63] (add64b)                   0.00       1.91 r
+  alu_inst/U23/Y (AND2X1)                                 0.03       1.94 r
+  alu_inst/U24/Y (INVX1)                                  0.02       1.95 f
+  alu_inst/U249/Y (OAI21X1)                               0.03       1.98 r
+  alu_inst/U235/Y (INVX1)                                 0.03       2.01 f
+  alu_inst/U143/Y (NAND3X1)                               0.04       2.05 r
+  alu_inst/U19/Y (BUFX2)                                  0.04       2.08 r
+  alu_inst/U134/Y (NOR3X1)                                0.03       2.12 f
+  alu_inst/U133/Y (NAND3X1)                               0.03       2.15 r
+  alu_inst/U21/Y (BUFX2)                                  0.04       2.19 r
+  alu_inst/U94/Y (NOR3X1)                                 0.03       2.21 f
+  alu_inst/cspr_Z (alu)                                   0.00       2.21 f
+  U758/Y (AOI22X1)                                        0.05       2.26 r
+  U1999/Y (INVX1)                                         0.02       2.28 f
+  Z_reg/D (DFFPOSX1)                                      0.00       2.28 f
+  data arrival time                                                  2.28
+
+  clock clk (rise edge)                                  10.00      10.00
+  clock network delay (ideal)                             0.00      10.00
+  Z_reg/CLK (DFFPOSX1)                                    0.00      10.00 r
+  library setup time                                     -0.06       9.94
+  data required time                                                 9.94
+  --------------------------------------------------------------------------
+  data required time                                                 9.94
+  data arrival time                                                 -2.28
+  --------------------------------------------------------------------------
+  slack (MET)                                                        7.66
+
+
+  Startpoint: IF_ID_reg_reg[28]
+              (rising edge-triggered flip-flop clocked by clk)
+  Endpoint: imem_out[28]
+            (output port)
+  Path Group: default
+  Path Type: max
+
+  Point                                    Incr       Path
+  -----------------------------------------------------------
+  IF_ID_reg_reg[28]/CLK (DFFPOSX1)         0.00 #     0.00 r
+  IF_ID_reg_reg[28]/Q (DFFPOSX1)           0.11       0.11 f
+  cond_engine/cond[0] (cond)               0.00       0.11 f
+  cond_engine/U17/Y (INVX1)                0.09       0.20 r
+  cond_engine/U24/Y (XNOR2X1)              0.04       0.25 f
+  cond_engine/U22/Y (AOI22X1)              0.05       0.29 r
+  cond_engine/U5/Y (BUFX2)                 0.04       0.33 r
+  cond_engine/U3/Y (OR2X1)                 0.04       0.37 r
+  cond_engine/U21/Y (OAI21X1)              0.02       0.38 f
+  cond_engine/U11/Y (AOI22X1)              0.04       0.43 r
+  cond_engine/U30/Y (INVX1)                0.03       0.46 f
+  cond_engine/pass (cond)                  0.00       0.46 f
+  U1176/Y (NAND3X1)                        0.03       0.49 r
+  U1987/Y (BUFX2)                          0.10       0.59 r
+  U1858/Y (AND2X1)                         0.03       0.63 r
+  U1859/Y (INVX1)                          0.02       0.64 f
+  U1164/Y (OAI21X1)                        0.03       0.67 r
+  U1996/Y (INVX1)                          0.03       0.70 f
+  U283/Y (OAI21X1)                         0.07       0.77 r
+  instr_mem/addr[5] (imem)                 0.00       0.77 r
+  instr_mem/U14842/Y (INVX1)               0.06       0.83 f
+  instr_mem/U7838/Y (OR2X1)                0.04       0.87 f
+  instr_mem/U7839/Y (INVX1)                0.01       0.88 r
+  instr_mem/U95/Y (AND2X1)                 0.25       1.13 r
+  instr_mem/U14850/Y (INVX1)               0.14       1.27 f
+  instr_mem/U13073/Y (INVX1)               0.13       1.40 r
+  instr_mem/U63604/Y (OAI21X1)             0.05       1.46 f
+  instr_mem/U63605/Y (NOR3X1)              0.03       1.48 r
+  instr_mem/U63614/Y (AOI22X1)             0.04       1.52 f
+  instr_mem/U4398/Y (BUFX2)                0.04       1.56 f
+  instr_mem/U7/Y (AND2X1)                  0.04       1.60 f
+  instr_mem/U63615/Y (NAND3X1)             0.03       1.63 r
+  instr_mem/U735/Y (BUFX2)                 0.04       1.67 r
+  instr_mem/U63684/Y (AOI22X1)             0.03       1.70 f
+  instr_mem/U1963/Y (AND2X2)               0.07       1.77 f
+  instr_mem/U1960/Y (INVX1)                0.01       1.78 r
+  instr_mem/U417/Y (OR2X1)                 0.04       1.82 r
+  instr_mem/U416/Y (OR2X1)                 0.05       1.87 r
+  instr_mem/dout[28] (imem)                0.00       1.87 r
+  imem_out[28] (out)                       0.00       1.87 r
+  data arrival time                                   1.87
+
+  max_delay                               10.00      10.00
+  output external delay                    0.00      10.00
+  data required time                                 10.00
+  -----------------------------------------------------------
+  data required time                                 10.00
+  data arrival time                                  -1.87
+  -----------------------------------------------------------
+  slack (MET)                                         8.13
+
+
+1

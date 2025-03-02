@@ -1,0 +1,48 @@
+mov r12, #0
+nop
+nop
+nop
+b #8
+cmp r12, #9
+nop
+beq #40
+mov r2, r12
+nop
+nop
+nop
+add r12, r12, #1
+cmp r2, #8
+nop
+bhi #5
+mov r3, r2
+nop
+nop
+nop
+add r9, r3, #1
+nop
+nop
+nop
+ldr r5, [r3, #1]
+ldr r4, [r2, #0]
+nop
+nop
+nop
+cmp r5, r4
+nop
+strlt r4, r9
+strlt r5, r2
+cmp r3, #8
+add r3, r3, #1
+nop
+mov r10, r9
+mov r11, r2
+bne #20
+b #5
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+b #44

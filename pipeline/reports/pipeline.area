@@ -1,0 +1,30 @@
+ 
+****************************************
+Report : area
+Design : pipeline
+Version: K-2015.06-SP5-5
+Date   : Fri Feb 28 19:47:38 2025
+****************************************
+
+Library(s) Used:
+
+    gscl45nm (File: /home/scf-22/ee577/NCSU45PDK/FreePDK45/osu_soc/lib/files/gscl45nm.db)
+
+Number of ports:                         1967
+Number of nets:                        175636
+Number of cells:                       173917
+Number of combinational cells:         139700
+Number of sequential cells:             34126
+Number of macros/black boxes:               0
+Number of buf/inv:                      54949
+Number of references:                      17
+
+Combinational area:             326737.448416
+Buf/Inv area:                    83040.286831
+Noncombinational area:          272260.634560
+Macro/Black Box area:                0.000000
+Net Interconnect area:      undefined  (No wire load specified)
+
+Total cell area:                598998.082976
+Total area:                 undefined
+1
