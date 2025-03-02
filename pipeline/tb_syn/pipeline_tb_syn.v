@@ -1,4 +1,9 @@
 /*
+pipeline_tb_syn.v
+Testbed for 5-stage Pipeline for ARMv8-M Architecture (Post-Synthesis)
+Engineer: Alexander Yazdani
+Spring 2025
+
 iverilog -o pipeline/build/pipeline_tb pipeline/tb/pipeline_tb.v pipeline/src/pipeline.v pipeline/src/imem_behavioral.v pipeline/src/datamem_behavioral.v pipeline/src/add64b.v pipeline/src/alu64b.v pipeline/src/regfile_behavioral.v pipeline/src/cond.v
 
 vvp pipeline/build/pipeline_tb

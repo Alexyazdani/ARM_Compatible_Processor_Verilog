@@ -1,4 +1,9 @@
-
+/*
+add64b.v
+Carry Look Ahead Adder for 5-stage Pipeline for ARMv8-M Architecture
+Engineer: Alexander Yazdani
+Spring 2025
+*/
 
 module pfa(input A, B, Cin, output result, output P, output G);
     assign G = A & B;
@@ -55,39 +60,3 @@ module add64b(input [63:0] A, B, input Cin, output [63:0] result, output Cout);
 
     assign Cout = G[3] | (P[3] & G[2]) | (P[3] & P[2] & G[1]) | (P[3] & P[2] & P[1] & G[0]) | (P[3] & P[2] & P[1] & P[0] & Cin);
 endmodule
-
-
-
-// module add64b(
-// 	input [63:0] A,
-// 	input [63:0] B,
-// 	input Cin,
-// 	output [63:0] result,
-// 	output Cout
-// 	);
-//   wire [63:0] carry;
-	
-//   genvar i;
-//   generate
-// 	  for (i=0; i< 64; i=i+1) begin : FA
-// 		if (i==0) begin
-// 			full_adder FA0 (A[i], B[i], Cin, result[i], carry[i]);
-// 		end else begin
-// 			full_adder FA (A[i], B[i], carry[i-1], result[i], carry[i]);
-// 		end
-// 	end
-//   endgenerate
-// 	assign Cout = carry[63];
-// endmodule
-
-// module full_adder (
-// 	input A,
-// 	input B,
-// 	input Cin,
-// 	output result,
-// 	output Cout
-// 	);
-			
-//   assign result  = A ^ B ^ Cin;
-//   assign Cout = (A&B) | (A&Cin) | (B&Cin); 
-// endmodule

@@ -1,5 +1,9 @@
-
-// Placeholder for data memory module
+/*
+datamem_behavioral.v
+Data Memory for 5-stage Pipeline for ARMv8-M Architecture
+Engineer: Alexander Yazdani
+Spring 2025
+*/
 
 module datamem (
     input         clk,

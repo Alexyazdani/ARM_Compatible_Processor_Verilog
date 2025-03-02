@@ -1,3 +1,9 @@
+/*
+regfile_behavioral.v
+Register File for 5-stage Pipeline for ARMv8-M Architecture
+Engineer: Alexander Yazdani
+Spring 2025
+*/
 
 module regfile16(
     input clk,

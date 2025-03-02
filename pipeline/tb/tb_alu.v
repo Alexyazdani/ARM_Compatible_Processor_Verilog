@@ -1,4 +1,9 @@
 /*
+tb_alu.v
+Testbed for ALU for 5-stage Pipeline for ARMv8-M Architecture
+Engineer: Alexander Yazdani
+Spring 2025
+
 iverilog -o pipeline/build/tb_alu pipeline/tb/tb_alu.v pipeline/src/alu64b.v pipeline/src/add64b.v
 
 vvp pipeline/build/tb_alu
