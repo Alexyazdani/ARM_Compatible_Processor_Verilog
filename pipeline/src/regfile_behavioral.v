@@ -1,24 +1,18 @@
-/*
-regfile_behavioral.v
-Register File for 5-stage Pipeline for ARMv8-M Architecture
-Engineer: Alexander Yazdani
-Spring 2025
-*/
 
-module regfile16(
+module rf16(
     input clk,
     input reset,
     input [3:0] r0addr,
     input [3:0] r1addr,
     input [3:0] waddr,
-    input [63:0] wdata,
+    input [31:0] wdata,
     input wea,
-    output [63:0] r0data,
-    output [63:0] r1data
+    output [31:0] r0data,
+    output [31:0] r1data
 );
 
     // 16-entry register file
-    reg [63:0] regfile [15:0];
+    reg [31:0] regfile [15:0];
 
     // Declare loop variable **outside** always block
     integer i;
@@ -27,7 +21,7 @@ module regfile16(
     always @(posedge clk) begin
         if (reset) begin
             for (i = 0; i < 16; i = i + 1)
-                regfile[i] <= 64'd0; 
+                regfile[i] <= 32'd0; 
         end else if (wea) begin
             regfile[waddr] <= wdata;
         end

@@ -1,0 +1,36 @@
+pipe enable cmd[1] 0x2
+
+imem_we     cmd[2] 0x4
+
+imem_re     cmd[3] 0x8
+
+dmem_we     cmd[4] 0x10
+dmem_re     cmd[5] 0x20
+reg_re      cmd[6] 0x40 
+
+
+
+sample command sequence:
+
+ilareg reset
+
+ilareg loadim <file_name>
+ilareg loaddm <file_name>
+
+ilareg run
+
+ilareg stop
+
+ilareg readim <addr>
+
+ilareg readdm <addr>
+
+ilareg readrf <addr>
+
+ilareg readflag
+
+ilareg readcounter
+
+ilareg readila1 <addr>  // read ex/mem state reg content, addr range from 0 to 40
+
+ilareg readila2 <addr> // read id/ex state reg content, addr range from 0 to 40 

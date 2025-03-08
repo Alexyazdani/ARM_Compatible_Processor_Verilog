@@ -1,10 +1,23 @@
-/*
-cond.v
-Conditional Engine for 5-stage Pipeline for ARMv8-M Architecture
-Engineer: Alexander Yazdani
-Spring 2025
-*/
-
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date:    21:49:26 02/24/2025 
+// Design Name: 
+// Module Name:    cond 
+// Project Name: 
+// Target Devices: 
+// Tool versions: 
+// Description: 
+//
+// Dependencies: 
+//
+// Revision: 
+// Revision 0.01 - File Created
+// Additional Comments: 
+//
+//////////////////////////////////////////////////////////////////////////////////
 module cond(
     input [3:0] cond,
     input N,

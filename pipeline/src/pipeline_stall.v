@@ -44,7 +44,7 @@ module pipeline (
 
 // Stage Registers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-reg [40:0] IF_ID_reg;       // Instruction Fetch/Decode
+reg [41:0] IF_ID_reg;       // Instruction Fetch/Decode
 reg [85:0] ID_EX_reg;      // Instruction Decode/Execute
 reg [61:0] EX_MEM_reg;      // Execute/Memory
 reg [36:0] MEM_WB_reg;      // Memory/Writeback
@@ -57,11 +57,12 @@ wire [8:0] PC_in;
 wire [8:0] PC;
 wire branch_sel_ID;
 wire [23:0] branch_offset;
+wire stall;
 
 counter PC_counter (
     .clk(clk),
     .reset(reset),
-    .pipe_en(pipe_en),
+    .pipe_en(pipe_en&&(~stall)),
     .in(PC),
     .out(PC_in)
 );
@@ -82,9 +83,11 @@ imem instr_mem (
 always @(posedge clk) begin
     if (reset)
         IF_ID_reg[31:0] <= 32'hEC000000;  // Reset to NOOP
-    else if (pipe_en)
+    else if (pipe_en&&(~stall)) begin
         IF_ID_reg <= imem_out;
         IF_ID_reg[40:32] <= PC;
+        IF_ID_reg[41] <= branch_sel_ID;     // Add a bubble if taken branch
+    end
 end
 
 
@@ -98,7 +101,7 @@ wire S_ID;                  // IF/ID[20]        // Set Condition Flag + Load/Sto
 wire [3:0] r0addr_ID;       // IF/ID[19:16]
 wire [3:0] Rd_ID;           // IF/ID[15:12]
 wire [7:0] shift;           // IF/ID[11:4]
-wire [11:0] Imm;             // IF/ID[11:0]
+wire [11:0] Imm;            // IF/ID[11:0]
 wire [3:0] r1addr_ID;       // IF/ID[3:0]
 wire [8:0] PC_ID;
 
@@ -127,19 +130,20 @@ cond cond_engine(
     .pass(cond_pass)
 );
 
+wire bubble_ID;
+
 // Control Logic
 wire data_process_ID;
 wire data_transfer_ID;
 wire NOP_ID;
 wire branch_instr;
 assign branch_instr = (instr_type_ID[1]&&~instr_type_ID[0]);
-assign branch_sel_ID = branch_instr && cond_pass;
+assign branch_sel_ID = branch_instr && cond_pass && ~bubble_ID;
 assign data_process_ID = (~instr_type_ID[1]&&~instr_type_ID[0]);
 assign data_transfer_ID = (~instr_type_ID[1]&&instr_type_ID[0]);
 assign NOP_ID = (instr_type_ID[1]&&instr_type_ID[0]);
 
-wire bubble_ID;
-assign bubble_ID = (branch_sel_ID || ~cond_pass || NOP_ID);
+assign bubble_ID =  (~cond_pass || NOP_ID || IF_ID_reg[41]);
 
 // WB/ID Wires
 wire wEn_WB;
@@ -180,7 +184,7 @@ always @(posedge clk) begin
         ID_EX_reg[75:74] <= 2'b11;        // Default to NOP
         ID_EX_reg[76] <= 1'b1;
         ID_EX_reg[85:77] <= 9'b0;
-    end else if (pipe_en) begin
+    end else if (pipe_en&&(~stall)) begin
         ID_EX_reg[31:0] <= Op1_ID;
         ID_EX_reg[63:32] <= Op2_ID;
         ID_EX_reg[64] <= I_ID;
@@ -188,7 +192,7 @@ always @(posedge clk) begin
         ID_EX_reg[69:66] <= opcode_ID;
         ID_EX_reg[73:70] <= Rd_ID;
         ID_EX_reg[75:74] <= instr_type_ID;
-        ID_EX_reg[76] <= bubble_ID;
+        ID_EX_reg[76] <= bubble_ID || branch_sel_ID;    // Inject bubble in EX if branch taken
 		ID_EX_reg[85:77] <= PC_ID;
     end
 end
@@ -252,7 +256,7 @@ always @(posedge clk) begin
         C <= 1'b0;
         Z <= 1'b0;
         V <= 1'b0;
-    end else if (pipe_en && S_EX) begin
+    end else if (pipe_en&&(~stall)&& S_EX) begin
         N <= N_EX;
         C <= C_EX;
         Z <= Z_EX;
@@ -266,7 +270,7 @@ always @(posedge clk) begin
         EX_MEM_reg[38:37] <= 2'b11;        // Default to NOP
         EX_MEM_reg[39] <= 1'b1;            // Default to bubble
         EX_MEM_reg[57:40] <= 9'b0;
-    end else if (pipe_en) begin
+    end else if (pipe_en&&(~stall)) begin
         EX_MEM_reg[31:0] <= EX_out;
         EX_MEM_reg[32] <= I_EX;
         EX_MEM_reg[36:33] <= Rd_EX;
@@ -343,21 +347,21 @@ assign dmem_waddr_in = dmem_we_external ? dmem_addr : Op2_MEM;
 assign dmem_raddr_in = dmem_re_external ? dmem_addr : alu_result_MEM[7:0];
 
 
-// imemory ILA (
-// 		.addr (ilaaddr),
-// 		.clk  (clk),
-// 		.din  ({dmem_raddr_in,dmem_waddr_in,(dmem_we_internal|dmem_we_external),(dmem_re_internal|dmem_re_external),dmem_data_in[6:0],dmem_out[6:0]}),
-// 		.dout(ila_out),
-// 		.we  (ilawea)
-// 		);
+imemory ILA (
+		.addr (ilaaddr),
+		.clk  (clk),
+		.din  ({dmem_raddr_in,dmem_waddr_in,(dmem_we_internal|dmem_we_external),(dmem_re_internal|dmem_re_external),dmem_data_in[6:0],dmem_out[6:0]}),
+		.dout(ila_out),
+		.we  (ilawea)
+		);
 
-// imemory ILA2 (
-// 		.addr (ila2addr),
-// 		.clk  (clk),
-// 		.din  ({instr_type_MEM,bubble_MEM,opcode_MEM,L_MEM,Rd_MEM,PC_MEM[8:0],mem_out[10:0]}),
-// 		.dout(ila2_out),
-// 		.we  (ila2wea)
-// 		);
+imemory ILA2 (
+		.addr (ila2addr),
+		.clk  (clk),
+		.din  ({instr_type_MEM,bubble_MEM,opcode_MEM,L_MEM,Rd_MEM,PC_MEM[8:0],mem_out[10:0]}),
+		.dout(ila2_out),
+		.we  (ila2wea)
+		);
 
 datamem data_mem (
     .clk(clk),
@@ -368,10 +372,20 @@ datamem data_mem (
     .dout(dmem_out)
 );
 
+reg latched_stall;
+always @(posedge clk) begin
+    if (reset) begin
+        latched_stall <= 1'b0;
+    end else begin
+        latched_stall <= stall;
+    end
+end
+assign stall = dmem_re_internal&&(~(latched_stall));
+
 always @(posedge clk) begin
     if (reset)
         MEM_WB_reg <= 37'b0;
-    else if (pipe_en) begin
+    else if (pipe_en&&(~stall)) begin
         MEM_WB_reg[31:0] <= mem_out;
         MEM_WB_reg[32] <= WB_en_MEM;
         MEM_WB_reg[36:33] <= Rd_MEM;

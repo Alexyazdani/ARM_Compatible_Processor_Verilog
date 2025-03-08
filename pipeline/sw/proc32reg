@@ -1,0 +1,380 @@
+#!/usr/bin/perl -w
+use lib "/usr/local/netfpga/lib/Perl5";
+use strict;
+my $ILA2_ADDR_REG = 0x2000400;
+my $ILA_ADDR_REG = 0x2000404;
+my $REG_ADDR_REG = 0x2000408;
+my $DMEM_ADDR_REG = 0x200040c;
+my $DMEM_DATA_REG  = 0x2000410;
+my $IMEM_ADDR_REG = 0x2000414;
+my $IMEM_DATA_REG = 0x2000418;
+my $CMD_REG = 0x200041c;
+my $ILA2_OUT_REG = 0x2000420;
+my $COUNTER_REG = 0x2000424;
+my $ILA_OUT_REG = 0x2000428;
+my $FLAG_REG  = 0x200042c;
+my $REG_OUT_REG = 0x2000430;
+my $DMEM_OUT_REG = 0x2000434;
+my $IMEM_OUT_REG = 0x2000438;
+
+
+sub regwrite {
+   my( $addr, $value ) = @_;
+   my $cmd = sprintf( "regwrite $addr 0x%08x", $value );
+   my $result = `$cmd`;
+   # print "Ran command '$cmd' and got result '$result'\n";
+}
+
+sub regread {
+   my( $addr ) = @_;
+   my $cmd = sprintf( "regread $addr" );
+   my @out = `$cmd`;
+   my $result = $out[0];
+   if ( $result =~ m/Reg (0x[0-9a-f]+) \((\d+)\):\s+(0x[0-9a-f]+) \((\d+)\)/ ) {
+      $result = $3;
+   }
+   return $result;
+}
+
+sub procreset {
+   regwrite( $CMD_REG, 0x1 );
+   regwrite( $CMD_REG, 0x0 );
+}
+
+sub write_dmem {
+   my($addr, $val) = @_;
+   my $cmd_val = hex(regread($CMD_REG));
+   regwrite($DMEM_DATA_REG, $val);
+   regwrite($DMEM_ADDR_REG, $addr);
+   regwrite($CMD_REG, $cmd_val | 0x10);
+   regwrite($CMD_REG, $cmd_val & ~0x10);
+}
+
+sub dump_dmem {
+    open my $olderr, ">&STDERR";   # Save original STDERR
+    open STDERR, ">", "/dev/null";
+    for my $addr (0..9) {
+        read_dmem($addr);
+    }
+    open STDERR, ">&", $olderr;
+}
+sub read_dmem{
+
+	my($addr) = @_;
+    my $cmd_val = hex(regread($CMD_REG));
+	regwrite($DMEM_ADDR_REG, $addr);
+	regwrite($CMD_REG, $cmd_val | 0x20);
+	print "D[", $addr, "]: ", regread($DMEM_OUT_REG),"\n";
+    regwrite($CMD_REG, $cmd_val & ~0x20);
+}
+
+sub dmem_load{
+    open my $olderr, ">&STDERR";   # Save original STDERR
+    open STDERR, ">", "/dev/null";
+	my($file) = @_;
+	open my $info, $file or die "Could not open $file: $1";
+	binmode $info;
+	my $count = 0;
+	while (1){
+		# my $hi = <$info>;
+		# last unless defined $hi;
+		# print $hi;
+		# my $decihi = eval("0b$hi");
+		
+		# my $lo = <$info>;
+		# last unless defined $lo;
+		# print $lo;
+		# my $decilo = eval("0b$lo");
+        my $line = <$info>;
+        last unless defined $line;
+        chomp $line;
+
+        my $val = substr($line, 0, 32);  # Upper 32 bits
+
+        print "$val\n";
+        my $decihi = eval("0b$val");
+		write_dmem($count,$decihi);
+		$count = $count +1;
+	}
+    open STDERR, ">&", $olderr;
+	
+}
+
+sub write_imem {
+   my($addr, $val) = @_;
+   my $cmd_val = hex(regread($CMD_REG));
+   regwrite($IMEM_DATA_REG, $val);
+   regwrite($IMEM_ADDR_REG, $addr);
+   regwrite($CMD_REG, $cmd_val | 0x4);
+   regwrite($CMD_REG, $cmd_val & ~0x4);
+}
+
+sub read_imem{
+
+	my($addr) = @_;
+    my $cmd_val = hex(regread($CMD_REG));
+	regwrite($IMEM_ADDR_REG, $addr);
+    regwrite($CMD_REG, $cmd_val | 0x8);
+	print "imem out is ",regread($IMEM_OUT_REG), "\n";
+	regwrite($CMD_REG, $cmd_val & ~0x8);
+
+}
+
+sub imem_load{
+    open my $olderr, ">&STDERR";   # Save original STDERR
+    open STDERR, ">", "/dev/null";
+	my($file) = @_;
+	open my $info, $file or die "Could not open $file: $1";
+	binmode $info;
+	my $count = 0;
+	while (my $line = <$info>){
+		print $line;
+		my $deci = eval("0b$line"); # convert binary to decimal
+		write_imem($count,$deci);
+		$count = $count +1;
+	}
+    open STDERR, ">&", $olderr;
+    print ""
+	
+}
+
+sub read_rf{
+
+	my($addr) = @_;
+	regwrite($REG_ADDR_REG, $addr);
+    my $cmd_val = hex(regread($CMD_REG));
+    regwrite($CMD_REG, $cmd_val | 0x40);
+	print "R[", $addr, "]: ", regread($REG_OUT_REG),"\n";
+	regwrite($CMD_REG, $cmd_val & ~0x40);
+}
+
+sub dump_rf{
+    open my $olderr, ">&STDERR";   # Save original STDERR
+    open STDERR, ">", "/dev/null";
+    for my $addr (0..15) {
+        read_rf($addr);
+    }
+    open STDERR, ">&", $olderr;
+}
+
+sub read_ila{
+    open my $olderr, ">&STDERR";   # Save original STDERR
+    open STDERR, ">", "/dev/null";
+	my($addr) = @_;
+	regwrite($ILA_ADDR_REG, $addr);
+	my $raw = regread($ILA_OUT_REG);	
+	$raw = substr($raw,2);
+	my $binary = unpack("B32",pack("H*",$raw));
+		print "ila out is ",$binary, "\n";
+	my $temp = substr($binary,0,8);
+	print "Dmem read address is ", eval("0b$temp"), "\n";
+	$temp = substr($binary,8,8);	
+	print "Dmem write address is ", eval("0b$temp"), "\n";
+	$temp = substr($binary,16,1);
+	print "dmem_we is ", $temp, "\n";
+	$temp = substr($binary,17,1);
+	print "dmem_re is ", $temp, "\n";
+	$temp = substr($binary,18,7);
+	print "Dmem data in [3:0]  is ", eval("0b$temp"), "\n";
+	$temp = substr($binary,25,7);
+	print "Dmem data out [3:0] is ", eval("0b$temp"), "\n";
+	open STDERR, ">&", $olderr;
+}
+
+sub read_ila2{
+    open my $olderr, ">&STDERR";   # Save original STDERR
+    open STDERR, ">", "/dev/null";
+	my($addr) = @_;
+	regwrite($ILA2_ADDR_REG, $addr);
+	my $raw = regread($ILA2_OUT_REG);	
+	$raw = substr($raw,2);
+	my $binary = unpack("B32",pack("H*",$raw));
+	print "ila out is ",$binary, "\n";
+	my $instr_type = substr($binary,0,2);
+    my $instr_label = "Unknown";
+    if    ($instr_type eq "11") { $instr_label = "NOP"; }
+    elsif ($instr_type eq "01") { $instr_label = "Data Transfer"; }
+    elsif ($instr_type eq "00") { $instr_label = "Data Processing"; }
+    elsif ($instr_type eq "10") { $instr_label = "Branch"; }
+	print "Instr Type is ", $instr_type," ",$instr_label, "\n";
+	my $temp = substr($binary,2,1);	
+	print "Bubble is ", $temp, "\n";
+	my $opcode = substr($binary,3,4);
+    my $opcode_label = "N/A";  # Default: Not applicable unless Data Processing
+    if ($instr_type eq "00") { # Decode only if it's Data Processing
+        if    ($opcode eq "0100") { $opcode_label = "ADD"; }
+        elsif ($opcode eq "1101") { $opcode_label = "MOV"; }
+        elsif ($opcode eq "1010") { $opcode_label = "CMP"; }
+        elsif ($opcode eq "0010") { $opcode_label = "SUB"; }
+        else { $opcode_label = "Unknown"; }
+        print "INSTR is ", $opcode_label, "\n";
+    }
+	print "Opcode is ", $temp, "\n";
+	$temp = substr($binary,7,1);
+    my $transfer_instr = "N/A";  # Default: Not applicable unless Data Transfer
+    if ($instr_type eq "01") { # Decode only if it's Data Transfer
+        if    ($temp eq "1") { $transfer_instr = "LDR"; }
+        else { $transfer_instr = "STR"; }
+        print "INSTR is ", $opcode_label, "\n";
+    }
+	print "L_MEM is ", $temp, "\n";
+
+	$temp = substr($binary,8,4);
+	print "Rd_MEM is is ", eval("0b$temp"), "\n";
+	$temp = substr($binary,12,9);
+	print "PC_MEM is ", eval("0b$temp"), "\n";
+	$temp = substr($binary,21,11);
+	print "MEM stage Output is ", eval("0b$temp"), "\n";
+    open STDERR, ">&", $olderr;
+}
+
+# sub readila{
+# 	my $addr = $ARGV[1];
+#     read_ila($addr);
+# 	read_ila2($addr);
+# }
+
+sub run{
+		regwrite($CMD_REG, 0x2 );
+}
+sub stop{
+		regwrite($CMD_REG, 0x0 );
+}
+
+# Turns an ascii string into a (pattern_hi,pattern_lo) list
+sub pattern_from_ascii {
+   my( $patstr ) = @_;
+   my @chars = split(//, $patstr);
+   my @ints = map {  ord( $_ ) } @chars;
+   my $validBytes = $#ints + 1;
+   my $hi = 0;
+   my $lo = 0;
+   for (my $i = 0; $i <= 6; $i++) {
+      if ($i < $validBytes) {
+         my $bit = 1 << (6 - $i);
+         # print "Setting mask bit $bit for byte $i\n";
+         $hi |= ($bit << 24);
+         if ($i <= 2) {
+            $hi |= ($ints[$i] << (8 * (2 - $i)));
+         } else {
+            my $pos = $i - 3;
+            $lo |= ($ints[$i] << (8 * (3 - $pos)));
+         }
+      }
+   }
+   return ($hi, $lo);
+}
+
+sub usage {
+   print "Usage: procreg <cmd> <cmd options>\n";
+   print "  to be updated:\n";
+
+}
+
+my $numargs = $#ARGV + 1;
+if( $numargs < 1 ) {
+   usage();
+   exit(1);
+}
+my $cmd = $ARGV[0];
+if ($cmd eq "reset") {
+   procreset();
+} elsif ($cmd eq "loadim") {
+     if ($numargs < 2) {
+      usage();
+      exit(1);
+   }
+    my $file = $ARGV[1];
+   imem_load($file);
+} elsif ($cmd eq "readim") {
+     if ($numargs < 2) {
+      usage();
+      exit(1);
+   }
+     my $addr = $ARGV[1];
+   read_imem($addr);
+}
+
+elsif ($cmd eq "loaddm") {
+     if ($numargs < 2) {
+      usage();
+      exit(1);
+   }
+    my $file = $ARGV[1];
+   dmem_load($file);
+} elsif ($cmd eq "readdm") {
+     if ($numargs < 2) {
+      usage();
+      exit(1);
+   }
+     my $addr = $ARGV[1];
+   read_dmem($addr);
+}elsif ($cmd eq "readrf") {
+     if ($numargs < 2) {
+      usage();
+      exit(1);
+   }
+     my $addr = $ARGV[1];
+   read_rf($addr);
+}elsif($cmd eq "readflag"){
+	print "flag is ",regread($FLAG_REG), "\n";	
+}elsif($cmd eq "run"){
+	run();	
+}elsif($cmd eq "stop"){
+	stop();	
+}
+elsif ($cmd eq "readila1"){
+	if($numargs<2) {
+		usage();
+		exit(1);
+	}
+	my $addr = $ARGV[1];
+	read_ila($addr);
+}
+elsif ($cmd eq "readila"){
+    if($numargs<2) {
+        usage();
+        exit(1);
+    }
+    my $addr = $ARGV[1];
+    read_ila($addr);
+	read_ila2($addr);
+}
+elsif ($cmd eq "readila2"){
+	if($numargs<2) {
+		usage();
+		exit(1);
+	}
+	my $addr = $ARGV[1];
+	read_ila2($addr);
+}elsif ($cmd eq "dumpdm") {
+   dump_dmem();
+}
+elsif ($cmd eq "dumprf") {
+   dump_rf();
+}elsif ($cmd eq "readcounter"){
+	print "counter is ",regread($COUNTER_REG), "\n";	
+}elsif ($cmd eq "allregs") {
+    open my $olderr, ">&STDERR";   # Save original STDERR
+    open STDERR, ">", "/dev/null";
+    print "command:         ", regread( $CMD_REG ), "\n";
+    print "dmem data:       ", regread( $DMEM_DATA_REG ),"\n";
+    print "dmem addr:       ", regread( $DMEM_ADDR_REG ), "\n";
+    print "imem data:       ", regread( $IMEM_DATA_REG ), "\n";
+    print "imem addr:       ", regread( $IMEM_ADDR_REG ), "\n";
+    print "flag:            ", regread( $FLAG_REG ), "\n";  
+    print "dmem out:        ", regread( $DMEM_OUT_REG ),"\n";
+    print "imem out:        ", regread( $IMEM_OUT_REG ), "\n";
+    print "rf out:          ", regread( $REG_OUT_REG ), "\n";  
+    print "ila1 addr:       ", regread( $ILA_ADDR_REG ), "\n";  
+    print "ila1 out:        ", regread( $ILA_OUT_REG ), "\n";
+    print "ila1 addr:       ", regread( $ILA2_ADDR_REG ), "\n";  
+    print "ila1 out:        ", regread( $ILA2_OUT_REG ), "\n";
+    print "counter:         ", regread( $COUNTER_REG ), "\n";
+    open STDERR, ">&", $olderr;
+}else {
+   print "Unrecognized command $cmd\n";
+   usage();
+   exit(1)
+}
+

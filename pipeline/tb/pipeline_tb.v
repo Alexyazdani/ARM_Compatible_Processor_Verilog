@@ -1,14 +1,7 @@
 /*
+iverilog -o proc32/build/pipeline_tb proc32/tb/pipeline_tb.v proc32/src/pipeline_stall.v proc32/src/imem_behavioral.v proc32/src/datamem_behavioral.v proc32/src/add32b.v proc32/src/alu32b.v proc32/src/cond.v proc32/src/regfile_behavioral.v proc32/src/counter.v
 
-pipeline_tb.v
-Testbed for 5-stage Pipeline for ARMv8-M Architecture
-Engineer: Alexander Yazdani
-Spring 2025
-
-
-iverilog -o pipeline/build/pipeline_tb pipeline/tb/pipeline_tb.v pipeline/src/pipeline.v pipeline/src/imem_behavioral.v pipeline/src/datamem_behavioral.v pipeline/src/add64b.v pipeline/src/alu64b.v pipeline/src/regfile_behavioral.v pipeline/src/cond.v
-
-vvp pipeline/build/pipeline_tb
+vvp proc32/build/pipeline_tb
 */
 
 `timescale 1ns / 1ps
@@ -23,19 +16,19 @@ module pipeline_tb;
     reg imem_we;
     reg imem_re;
 
-    reg [63:0] dmem_data;
+    reg [31:0] dmem_data;
     reg [7:0] dmem_addr;
-    reg dmem_we;
-    reg dmem_re;
+    reg dmem_we_external;
+    reg dmem_re_external;
 
     reg [3:0] reg_addr;
     reg reg_re;
 
     wire [31:0] imem_out;
-    wire [63:0] dmem_out;
-    wire [63:0] reg_out;
+    wire [31:0] dmem_out;
+    wire [31:0] reg_out;
     wire N, Z, C, V;
-    wire [8:0] PC;
+    // wire [8:0] PC;
 
     // Instantiate Pipeline
     pipeline dut (
@@ -49,8 +42,8 @@ module pipeline_tb;
         .dmem_data(dmem_data),
         .dmem_addr(dmem_addr),
         .reg_addr(reg_addr),
-        .dmem_we(dmem_we),
-        .dmem_re(dmem_re),
+        .dmem_we_external(dmem_we_external),
+        .dmem_re_external(dmem_re_external),
         .reg_re(reg_re),
         .imem_out(imem_out),
         .dmem_out(dmem_out),
@@ -58,8 +51,8 @@ module pipeline_tb;
         .N(N),
         .Z(Z),
         .C(C),
-        .V(V),
-        .PC(PC)
+        .V(V)
+        // .PC(PC)
     );
 
     // Clock Generation
@@ -93,8 +86,8 @@ module pipeline_tb;
 
     task load_dmem(input reg [127:0] filename);
         integer file, status;
-        reg [63:0] data;
-        reg [8:0] addr;
+        reg [31:0] data;
+        reg [7:0] addr;
         begin
             file = $fopen(filename, "r");
             if (file == 0) begin
@@ -103,7 +96,7 @@ module pipeline_tb;
             end
             $display("Loading DMEM from %s...", filename);
             @(negedge clk);
-            dmem_we = 1;
+            dmem_we_external = 1;
             addr = 0;  // Start at address 0
             while (!$feof(file)) begin
                 status = $fscanf(file, "%b\n", data);
@@ -112,7 +105,7 @@ module pipeline_tb;
                 @(negedge clk);  // Wait for clock edge before next write
                 addr = addr + 1;  // Increment address
             end
-            dmem_we = 0;
+            dmem_we_external = 0;
             $fclose(file);
         end
     endtask
@@ -139,13 +132,13 @@ module pipeline_tb;
         begin
             $display("\nDumping DMEM contents...");
             @(negedge clk);
-            dmem_re = 1;
+            dmem_re_external = 1;
             for (i = 0; i < 256; i = i + 1) begin
                 dmem_addr = i;
                 @(negedge clk);  // Wait for clock edge before reading
                 $display("DMEM[%0d] = %b", i, dmem_out);
             end
-            dmem_re = 0;
+            dmem_re_external = 0;
         end
     endtask
 
@@ -184,8 +177,8 @@ module pipeline_tb;
         imem_addr = 0;
         imem_data = 0;
 
-        dmem_we = 0;
-        dmem_re = 0;
+        dmem_we_external = 0;
+        dmem_re_external = 0;
         dmem_addr = 0;
         dmem_data = 0;
 
@@ -197,32 +190,41 @@ module pipeline_tb;
 
         // Load memory contents from files
         load_imem("instr.txt");
+        // load_imem("instrnops.txt");
+        // load_imem("debug1.bin");
         load_dmem("data.txt");
+        // load_imem("debug1.bin");
         @(negedge clk);
         pipe_en = 1;
 
         // Dump memory contents for verification
-        // #10000;
-        wait(dut.PC >= 32'd47);
+        // #100000;
+        wait(dut.PC >= 9'd48); //42, 96  (44 for sort)
         pipe_en = 0;
         dump_imem();
         dump_dmem();
         dump_regfile();
         dump_cspr();
-        $display("PC = %d", PC);
+        $display("PC = %d", dut.PC);
 
         // End Simulation
         $finish;
     end
 
 // initial begin
-//     $monitor("stall = %d", dut.stall_counter); 
+//     $monitor("PC = %d", dut.PC); 
 // end
 
 // initial begin
+//     $monitor("waddr_in = %d", dut.dmem_waddr_in); 
+// end
+
+
+// initial begin
 //     forever begin
-//         $display("stall = %d", dut.stall_counter); 
-//         #10;
+//         @(negedge clk);
+//         $display("PC = %d", dut.PC); 
+//         // #10;
 //     end
 // end
 endmodule

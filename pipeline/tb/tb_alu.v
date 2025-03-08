@@ -1,24 +1,19 @@
 /*
-tb_alu.v
-Testbed for ALU for 5-stage Pipeline for ARMv8-M Architecture
-Engineer: Alexander Yazdani
-Spring 2025
+iverilog -o proc32/build/tb_alu proc32/tb/tb_alu.v proc32/src/alu32b.v proc32/src/add32b.v
 
-iverilog -o pipeline/build/tb_alu pipeline/tb/tb_alu.v pipeline/src/alu64b.v pipeline/src/add64b.v
-
-vvp pipeline/build/tb_alu
+vvp proc32/build/tb_alu
 */
 
 `timescale 1ns / 1ps
 
 module tb_alu;
-    reg [63:0] op1, op2;
+    reg [31:0] op1, op2;
     reg [3:0] opcode;
     reg set_cond;
-    wire [63:0] result;
+    wire [31:0] result;
     wire cspr_N, cspr_Z, cspr_C, cspr_V;
     
-    reg [63:0] expected_result;
+    reg [31:0] expected_result;
     reg expected_N, expected_Z, expected_C, expected_V;
     
     // Instantiate ALU
@@ -35,10 +30,10 @@ module tb_alu;
     );
 
     task run_test;
-        input [63:0] test_op1, test_op2;
+        input [31:0] test_op1, test_op2;
         input [3:0] test_opcode;
         input test_set_cond;
-        input [63:0] exp_result;
+        input [31:0] exp_result;
         input exp_N, exp_Z, exp_C, exp_V;
         
         begin
@@ -70,39 +65,35 @@ module tb_alu;
         $display("Starting ALU test...");
 
         // ADD Tests (Opcode: 4'b0100)
-        run_test(64'h0000000000000001, 64'h0000000000000001, 4'b0100, 0, 64'h0000000000000002, 0, 0, 0, 0); // 1 + 1 = 2
-        run_test(64'h7FFFFFFFFFFFFFFF, 64'h0000000000000001, 4'b0100, 0, 64'h8000000000000000, 0, 0, 0, 0); // Overflow case
-        run_test(64'h8000000000000000, 64'hFFFFFFFFFFFFFFFF, 4'b0100, 0, 64'h7FFFFFFFFFFFFFFF, 0, 0, 0, 0); // Min + (-1)
-        run_test(64'h0000123456789ABC, 64'h000087654321FFFF, 4'b0100, 0, 64'h00009999999a9abb, 0, 0, 0, 0); // Random addition
-        run_test(64'h0000000000000000, 64'h0000000000000000, 4'b0100, 0, 64'h0000000000000000, 0, 0, 0, 0); // Zero case
+        run_test(32'h00000001, 32'h00000001, 4'b0100, 0, 32'h00000002, 0, 0, 0, 0); // 1 + 1 = 2
+        run_test(32'h7FFFFFFF, 32'h00000001, 4'b0100, 0, 32'h80000000, 0, 0, 0, 0); // Overflow case
+        run_test(32'h80000000, 32'hFFFFFFFF, 4'b0100, 0, 32'h7FFFFFFF, 0, 0, 0, 0); // Min + (-1)
+        run_test(32'h12345678, 32'h87654321, 4'b0100, 0, 32'h99999999, 0, 0, 0, 0); // Random addition
+        run_test(32'h00000000, 32'h00000000, 4'b0100, 0, 32'h00000000, 0, 0, 0, 0); // Zero case
 
         // SUB Tests (Opcode: 4'b0010)
-        run_test(64'h0000000000000002, 64'h0000000000000001, 4'b0010, 0, 64'h0000000000000001, 0, 0, 0, 0); // 2 - 1 = 1
-        run_test(64'h8000000000000000, 64'h0000000000000001, 4'b0010, 0, 64'h7FFFFFFFFFFFFFFF, 0, 0, 0, 0); // Min - 1
-        run_test(64'h7FFFFFFFFFFFFFFF, 64'hFFFFFFFFFFFFFFFF, 4'b0010, 0, 64'h8000000000000000, 0, 0, 0, 0); // Max - (-1)
-        run_test(64'hFFFFFFFFFFFFFFFF, 64'h0000000000000001, 4'b0010, 0, 64'hFFFFFFFFFFFFFFFE, 0, 0, 0, 0); // -1 - 1
-        run_test(64'h1234567890ABCDEF, 64'h1234567890ABCDEF, 4'b0010, 0, 64'h0000000000000000, 0, 0, 0, 0); // Same value subtraction
+        run_test(32'h00000002, 32'h00000001, 4'b0010, 0, 32'h00000001, 0, 0, 0, 0); // 2 - 1 = 1
+        run_test(32'h80000000, 32'h00000001, 4'b0010, 0, 32'h7FFFFFFF, 0, 0, 0, 0); // Min - 1
+        run_test(32'h7FFFFFFF, 32'hFFFFFFFF, 4'b0010, 0, 32'h80000000, 0, 0, 0, 0); // Max - (-1)
+        run_test(32'hFFFFFFFF, 32'h00000001, 4'b0010, 0, 32'hFFFFFFFE, 0, 0, 0, 0); // -1 - 1
+        run_test(32'h90ABCDEF, 32'h90ABCDEF, 4'b0010, 0, 32'h00000000, 0, 0, 0, 0); // Same value subtraction
 
         // MOV Tests (Opcode: 4'b1101)
-        run_test(64'h0000000000000000, 64'h0000000000000001, 4'b1101, 0, 64'h0000000000000001, 0, 0, 0, 0); // MOV 1
-        run_test(64'hFFFFFFFFFFFFFFFF, 64'h8000000000000000, 4'b1101, 0, 64'h8000000000000000, 0, 0, 0, 0); // MOV min value
-        run_test(64'h7FFFFFFFFFFFFFFF, 64'h1234567890ABCDEF, 4'b1101, 0, 64'h1234567890ABCDEF, 0, 0, 0, 0); // MOV random value
-        run_test(64'h0000000000000000, 64'h0000000000000000, 4'b1101, 0, 64'h0000000000000000, 0, 0, 0, 0); // MOV zero
-        run_test(64'hFFFFFFFFFFFFFFFF, 64'hFFFFFFFFFFFFFFFF, 4'b1101, 0, 64'hFFFFFFFFFFFFFFFF, 0, 0, 0, 0); // MOV -1
+        run_test(32'h00000000, 32'h00000001, 4'b1101, 0, 32'h00000001, 0, 0, 0, 0); // MOV 1
+        run_test(32'hFFFFFFFF, 32'h80000000, 4'b1101, 0, 32'h80000000, 0, 0, 0, 0); // MOV min value
+        run_test(32'h7FFFFFFF, 32'h12345678, 4'b1101, 0, 32'h12345678, 0, 0, 0, 0); // MOV random value
+        run_test(32'h00000000, 32'h00000000, 4'b1101, 0, 32'h00000000, 0, 0, 0, 0); // MOV zero
+        run_test(32'hFFFFFFFF, 32'hFFFFFFFF, 4'b1101, 0, 32'hFFFFFFFF, 0, 0, 0, 0); // MOV -1
 
         // CMP Tests (Opcode: 4'b1010, set_cond = 1)
-        run_test(64'h0000000000000001, 64'h0000000000000001, 4'b1010, 1, 64'h0000000000000000, 0, 1, 1, 0); // Equal
-        run_test(64'h0000000000000002, 64'h0000000000000001, 4'b1010, 1, 64'h0000000000000001, 0, 0, 1, 0); // Greater than
-        run_test(64'h0000000000000001, 64'h0000000000000002, 4'b1010, 1, 64'hFFFFFFFFFFFFFFFF, 1, 0, 0, 0); // Less than
-        run_test(64'h7FFFFFFFFFFFFFFF, 64'hFFFFFFFFFFFFFFFF, 4'b1010, 1, 64'h8000000000000000, 1, 0, 0, 1); // Max vs negative
-        run_test(64'hFFFFFFFFFFFFFFFF, 64'h0000000000000001, 4'b1010, 1, 64'hFFFFFFFFFFFFFFFE, 1, 0, 1, 0); // Negative vs positive
+        run_test(32'h00000001, 32'h00000001, 4'b1010, 1, 32'h00000000, 0, 1, 1, 0); // Equal
+        run_test(32'h00000002, 32'h00000001, 4'b1010, 1, 32'h00000001, 0, 0, 1, 0); // Greater than
+        run_test(32'h00000001, 32'h00000002, 4'b1010, 1, 32'hFFFFFFFF, 1, 0, 0, 0); // Less than
+        run_test(32'h7FFFFFFF, 32'hFFFFFFFF, 4'b1010, 1, 32'h80000000, 1, 0, 0, 1); // Max vs negative
+        run_test(32'hFFFFFFFF, 32'h00000001, 4'b1010, 1, 32'hFFFFFFFE, 1, 0, 1, 0); // Negative vs positive
 
         $display("ALU test completed.");
         $finish;
     end
 
-    // initial begin
-    //     $dumpfile("alu_wave.vcd"); // Specify the VCD output file
-    //     $dumpvars(0, tb_alu);      // Dump all variables in testbench scope
-    // end
 endmodule

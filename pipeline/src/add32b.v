@@ -1,9 +1,4 @@
-/*
-add64b.v
-Carry Look Ahead Adder for 5-stage Pipeline for ARMv8-M Architecture
-Engineer: Alexander Yazdani
-Spring 2025
-*/
+
 
 module pfa(input A, B, Cin, output result, output P, output G);
     assign G = A & B;
@@ -45,18 +40,29 @@ module cla_16bit(input [15:0] A, B, input Cin, output [15:0] result, output P0, 
     assign P0 = P[3] & P[2] & P[1] & P[0];
 endmodule
 
-module add64b(input [63:0] A, B, input Cin, output [63:0] result, output Cout);
-    wire [3:0] P, G, C;
+// module add64b(input [63:0] A, B, input Cin, output [63:0] result, output Cout);
+//     wire [3:0] P, G, C;
+
+//     cla_16bit CLA0 (A[15:0], B[15:0], Cin, result[15:0], P[0], G[0]);
+//     cla_16bit CLA1 (A[31:16], B[31:16], C[0], result[31:16], P[1], G[1]);
+//     cla_16bit CLA2 (A[47:32], B[47:32], C[1], result[47:32], P[2], G[2]);
+//     cla_16bit CLA3 (A[63:48], B[63:48], C[2], result[63:48], P[3], G[3]);
+
+//     assign C[0] = G[0] | (P[0] & Cin);
+//     assign C[1] = G[1] | (P[1] & G[0]) | (P[0] & P[1] & Cin);
+//     assign C[2] = G[2] | (P[2] & G[1]) | (P[2] & P[1] & G[0]) | (P[2] & P[1] & P[0] & Cin);
+//     assign C[3] = G[3] | (P[3] & G[2]) | (P[3] & P[2] & G[1]) | (P[3] & P[2] & P[1] & G[0]) | (P[3] & P[2] & P[1] & P[0] & Cin);
+
+//     assign Cout = G[3] | (P[3] & G[2]) | (P[3] & P[2] & G[1]) | (P[3] & P[2] & P[1] & G[0]) | (P[3] & P[2] & P[1] & P[0] & Cin);
+// endmodule
+
+module add32b(input [31:0] A, B, input Cin, output [31:0] result, output Cout);
+    wire [1:0] P, G, C;
 
     cla_16bit CLA0 (A[15:0], B[15:0], Cin, result[15:0], P[0], G[0]);
     cla_16bit CLA1 (A[31:16], B[31:16], C[0], result[31:16], P[1], G[1]);
-    cla_16bit CLA2 (A[47:32], B[47:32], C[1], result[47:32], P[2], G[2]);
-    cla_16bit CLA3 (A[63:48], B[63:48], C[2], result[63:48], P[3], G[3]);
 
     assign C[0] = G[0] | (P[0] & Cin);
-    assign C[1] = G[1] | (P[1] & G[0]) | (P[0] & P[1] & Cin);
-    assign C[2] = G[2] | (P[2] & G[1]) | (P[2] & P[1] & G[0]) | (P[2] & P[1] & P[0] & Cin);
-    assign C[3] = G[3] | (P[3] & G[2]) | (P[3] & P[2] & G[1]) | (P[3] & P[2] & P[1] & G[0]) | (P[3] & P[2] & P[1] & P[0] & Cin);
-
-    assign Cout = G[3] | (P[3] & G[2]) | (P[3] & P[2] & G[1]) | (P[3] & P[2] & P[1] & G[0]) | (P[3] & P[2] & P[1] & P[0] & Cin);
+    assign Cout = G[1] | (P[1] & G[0]) | (P[0] & P[1] & Cin);
 endmodule
+
