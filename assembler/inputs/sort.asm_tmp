@@ -5,7 +5,7 @@ nop
 b #8
 cmp r12, #9
 nop
-beq #40
+beq #42
 mov r2, r12
 nop
 nop
@@ -23,6 +23,9 @@ nop
 nop
 nop
 ldr r5, [r3, #1]
+nop
+nop
+nop
 ldr r4, [r2, #0]
 nop
 nop
@@ -34,8 +37,7 @@ strlt r5, r2
 cmp r3, #8
 add r3, r3, #1
 nop
-mov r10, r9
-mov r11, r2
+nop
 bne #20
 b #5
 nop
@@ -45,4 +47,4 @@ nop
 nop
 nop
 nop
-b #44
+b #46

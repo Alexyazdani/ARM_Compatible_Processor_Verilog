@@ -1,8 +1,4 @@
 r"""
-assembler.py
-Engineer: Alexander Yazdani
-Spring 2025
-
 Support List:
     Data Processing Instructions:
         - SUB
@@ -28,7 +24,7 @@ class Instruction:
     def __init__(self, instr):
         self.instr = instr.split("//")[0].strip()
         self.fields = self.instr.split()
-        self.mnemonic = self.fields[0].upper()
+        self.mnemonic = self.fields[0].upper().strip()
         self.process_instruction()
 
     def __repr__(self):
@@ -83,28 +79,64 @@ class Instruction:
                 self.Op2 = str(bin(int(self.fields[2][1:].replace(",", "")))[2:].zfill(12))
             self.binary = f"{self.cond}{self.instr_type}{self.I}{self.opcode}{self.S}{self.Rn}{self.Rd}{self.Op2}"
 
-        elif self.mnemonic in {"LDR", "STRLT"}:          # Data Transfer Instructions
+        elif self.mnemonic[:3] in {"LDR", "STR"}:          # Data Transfer Instructions
             self.instr_type = "01"
-            if self.mnemonic == "LDR":
+            if self.mnemonic[:3] == "LDR":
                 self.cond = "1110"
                 self.L = "1"
                 self.Rd = str(bin(int(self.fields[1][1:].replace(",", "")))[2:].zfill(4))
-                self.Rn = str(bin(int(self.fields[2].replace("[", "")[1:].replace(",", "")))[2:].zfill(4))
+                self.Rn = str(bin(int(self.fields[2].replace("[", "").replace("]", "")[1:].replace(",", "")))[2:].zfill(4))
                 if self.fields[3][0] == "#":
                     self.I = "1"
                 else:
                     self.I = "0"
-                self.Op2 = str(bin(int(self.fields[3].replace("]", "")[1:].replace(",", "")))[2:].zfill(12))
-            elif self.mnemonic == "STRLT":
-                self.cond = "1011"
+                self.Op2 = str(bin(int(self.fields[3].replace("[", "").replace("]", "")[1:].replace(",", "")))[2:].zfill(12))
+            elif self.mnemonic[:3] == "STR":
+                self.cond = "1110"
                 self.L = "0"
                 self.Rd = "0000"
-                self.Rn = str(bin(int(self.fields[1][1:].replace(",", "")))[2:].zfill(4))
+                self.Rn = str(bin(int(self.fields[1].replace("[", "").replace("]", "")[1:].replace(",", "")))[2:].zfill(4))
                 if self.fields[2][0] == "#":
                     self.I = "1"
                 else:
                     self.I = "0"
-                self.Op2 = str(bin(int(self.fields[2][1:].replace(",", "")))[2:].zfill(12))
+                self.Op2 = str(bin(int(self.fields[2].replace("[", "").replace("]", "")[1:].replace(",", "")))[2:].zfill(12))
+
+            if self.mnemonic[3:5]:
+                if self.mnemonic[3:5] == "EQ":          # Equal
+                    self.cond = "0000"
+                elif self.mnemonic[3:5] == "NE":        # Not Equal
+                    self.cond = "0001"
+                elif self.mnemonic[3:5] == "CS":        # Carry Set
+                    self.cond = "0010"
+                elif self.mnemonic[3:5] == "CC":        # Carry Clear
+                    self.cond = "0011"
+                elif self.mnemonic[3:5] == "MI":        # Minus
+                    self.cond = "0100"
+                elif self.mnemonic[3:5] == "PL":        # Plus
+                    self.cond = "0101"
+                elif self.mnemonic[3:5] == "VS":        # Overflow
+                    self.cond = "0110"
+                elif self.mnemonic[3:5] == "VC":        # No Overflow
+                    self.cond = "0111"
+                elif self.mnemonic[3:5] == "HI":        # Unsigned Higher
+                    self.cond = "1000"
+                elif self.mnemonic[3:5] == "LS":        # Unsigned Lower or Same
+                    self.cond = "1001"
+                elif self.mnemonic[3:5] == "GE":        # Signed Greater or Equal
+                    self.cond = "1010"
+                elif self.mnemonic[3:5] == "LT":        # Signed Less Than
+                    self.cond = "1011"
+                elif self.mnemonic[3:5] == "GT":        # Signed Greater Than
+                    self.cond = "1100"
+                elif self.mnemonic[3:5] == "LE":        # Signed Less or Equal
+                    self.cond = "1101"
+                elif self.mnemonic[3:5] == "AL":        # Always
+                    self.cond = "1110"
+                else:
+                    self.cond = "1111"                  # Never, same as NOP
+                    raise SyntaxError(f"Invalid Instruction: '{self.mnemonic}': {self.fields}")
+
 
             self.binary = f"{self.cond}{self.instr_type}{self.I}0000{self.L}{self.Rn}{self.Rd}{self.Op2}"
 
