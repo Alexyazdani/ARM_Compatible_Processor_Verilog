@@ -17,7 +17,7 @@
 <img width="739" alt="image" src="https://github.com/user-attachments/assets/58e63a16-5b61-4e81-a6b9-488b0ad3ff95" />
 
 # 5-Stage Pipeline Design
-![image](https://github.com/user-attachments/assets/b2ca7c7e-a9e5-43a9-b6cb-da3cb33c9cdd)
+![Block_Diagram](https://github.com/user-attachments/assets/001806bf-6af8-4ade-b639-43ca644f975a)
 
 # ARM Subset: List of Instructions to Implement:
 ## Data Processing Instructions:
